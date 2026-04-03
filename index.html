@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FocusFlow — Study Planner & Pomodoro</title>
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<!-- Google Fonts: Crimson Pro (display) + DM Mono (timer) + Figtree (body) -->
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;600;700&family=DM+Mono:wght@300;400;500&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+/* ================================================
+   DESIGN DIRECTION: Deep Space Academic
+   Dark observatory aesthetic — rich midnight blues,
+   warm amber accents, telescope-era serif typography.
+   Feels like studying at 2am in a beautiful library.
+   ================================================ */
+
+:root {
+  --font-display: 'Crimson Pro', serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-body: 'Figtree', sans-serif;
+
+  /* DARK THEME */
+  --bg-void: #080b14;
+  --bg-deep: #0d1321;
+  --bg-mid: #111827;
+  --bg-surface: #161e2e;
+  --bg-raised: #1c2638;
+  --bg-hover: #22304a;
+  --border: rgba(99,120,178,0.15);
+  --border-bright: rgba(99,120,178,0.3);
+  --text-1: #e8eaf6;
+  --text-2: #9aa5c4;
+  --text-3: #5a6585;
+  --amber: #f6ad55;
+  --amber-soft: rgba(246,173,85,0.12);
+  --amber-glow: rgba(246,173,85,0.35);
+  --teal: #38b2ac;
+  --teal-soft: rgba(56,178,172,0.1);
+  --teal-glow: rgba(56,178,172,0.3);
+  --rose: #fc8181;
+  --rose-soft: rgba(252,129,129,0.1);
+  --green: #68d391;
+  --green-soft: rgba(104,211,145,0.1);
+  --blue: #63b3ed;
+  --purple: #b794f4;
+  --focus-ring: rgba(246,173,85,0.2);
+  --timer-track: rgba(99,120,178,0.15);
+  --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  --shadow-lg: 0 12px 50px rgba(0,0,0,0.6);
+  --glow-amber: 0 0 40px rgba(246,173,85,0.15), 0 0 80px rgba(246,173,85,0.05);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --sidebar-w: 320px;
+  --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+[data-theme="light"] {
+  --bg-void: #f0f2f8;
+  --bg-deep: #e8ecf4;
+  --bg-mid: #f5f6fc;
+  --bg-surface: #ffffff;
+  --bg-raised: #f0f3fb;
+  --bg-hover: #e4e9f6;
+  --border: rgba(99,120,178,0.12);
+  --border-bright: rgba(99,120,178,0.25);
+  --text-1: #1a202c;
+  --text-2: #4a5568;
+  --text-3: #a0aec0;
+  --amber: #d97706;
+  --amber-soft: rgba(217,119,6,0.08);
+  --amber-glow: rgba(217,119,6,0.2);
+  --teal: #0d9488;
+  --teal-soft: rgba(13,148,136,0.08);
+  --rose: #e53e3e;
+  --rose-soft: rgba(229,62,62,0.08);
+  --green: #276749;
+  --green-soft: rgba(39,103,73,0.08);
+  --shadow: 0 4px 24px rgba(99,120,178,0.1);
+  --shadow-lg: 0 12px 50px rgba(99,120,178,0.15);
+  --glow-amber: none;
+  --timer-track: rgba(99,120,178,0.1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-void);
+  color: var(--text-1);
+  height: 100vh;
+  overflow: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
+  position: relative;
+}
+
+/* Star field background (dark only) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 10%, rgba(255,255,255,0.1) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 50%, rgba(255,255,255,0.08) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 40% 70%, rgba(255,255,255,0.12) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.06) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 20%, rgba(255,255,255,0.09) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 90%, rgba(255,255,255,0.07) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  transition: opacity 0.4s;
+}
+[data-theme="light"] body::before { opacity: 0; }
+
+/* ================================================
+   SCROLLBAR
+   ================================================ */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+/* ================================================
+   APP SHELL
+   ================================================ */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ================================================
+   SIDEBAR
+   ================================================ */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--bg-deep);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: background 0.4s;
+}
+
+.sidebar-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.app-logo {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--amber) 0%, #e88c24 100%);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  box-shadow: 0 4px 16px var(--amber-glow);
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+.app-logo:hover { transform: rotate(-8deg) scale(1.05); }
+.app-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.3px;
+}
+.app-name span { color: var(--amber); }
+
+/* Date display */
+.date-strip {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.date-text { font-size: 11.5px; color: var(--text-3); font-weight: 500; }
+.streak-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--amber-soft);
+  border: 1px solid var(--amber-glow);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--amber);
+}
+
+/* Daily goal */
+.goal-section {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.goal-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.goal-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-3); font-weight: 600; }
+.goal-value { font-family: var(--font-mono); font-size: 12px; color: var(--amber); font-weight: 500; }
+.progress-bar-track {
+  height: 5px;
+  background: var(--timer-track);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--amber), #e88c24);
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 0 8px var(--amber-glow);
+}
+
+/* Task section */
+.tasks-section { flex: 1; overflow-y: auto; padding: 16px; }
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.2px;
+}
+.btn-add-task {
+  width: 28px; height: 28px;
+  background: var(--amber-soft);
+  border: 1px solid var(--amber-glow);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--amber);
+  transition: var(--transition);
+}
+.btn-add-task:hover { background: var(--amber); color: white; }
+
+/* Task item */
+.task-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  animation: slideTaskIn 0.25s ease both;
+}
+@keyframes slideTaskIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.task-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: var(--task-color, var(--text-3));
+}
+.task-item:hover { background: var(--bg-raised); border-color: var(--border-bright); transform: translateX(2px); }
+.task-item.active-task { background: var(--bg-raised); border-color: var(--amber-glow); box-shadow: 0 0 0 1px var(--amber-glow); }
+.task-item.completed { opacity: 0.4; }
+.task-item.completed .task-name { text-decoration: line-through; }
+
+.task-top { display: flex; align-items: flex-start; gap: 9px; }
+.task-check {
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--border-bright);
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: var(--transition);
+  cursor: pointer;
+  font-size: 11px;
+  color: transparent;
+}
+.task-check.checked { background: var(--green); border-color: var(--green); color: white; }
+.task-name { font-size: 13px; font-weight: 600; color: var(--text-1); flex: 1; line-height: 1.35; }
+.task-subject { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.task-meta { display: flex; align-items: center; gap: 6px; margin-top: 8px; justify-content: space-between; }
+.priority-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.priority-high { background: var(--rose-soft); color: var(--rose); border: 1px solid rgba(252,129,129,0.2); }
+.priority-medium { background: var(--amber-soft); color: var(--amber); border: 1px solid rgba(246,173,85,0.2); }
+.priority-low { background: var(--teal-soft); color: var(--teal); border: 1px solid rgba(56,178,172,0.2); }
+.pomodoros-done {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--text-3);
+}
+.pomo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); opacity: 0.5; }
+.pomo-dot.filled { opacity: 1; }
+.task-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+.task-item:hover .task-actions { opacity: 1; }
+.task-action-btn {
+  width: 22px; height: 22px;
+  background: var(--bg-mid);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text-3);
+  transition: var(--transition);
+}
+.task-action-btn:hover { background: var(--rose-soft); color: var(--rose); border-color: var(--rose); }
+.task-action-btn.edit:hover { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
+
+/* Sidebar footer */
+.sidebar-footer {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+.sf-btn {
+  flex: 1;
+  padding: 9px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.sf-btn:hover { background: var(--bg-raised); color: var(--text-1); }
+.sf-btn.theme-btn { flex: 0 0 40px; padding: 0; font-size: 16px; }
+
+/* ================================================
+   MAIN CONTENT
+   ================================================ */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-mid);
+}
+
+/* Top bar */
+.topbar {
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-deep);
+  flex-shrink: 0;
+}
+.tab-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: var(--transition);
+}
+.tab-btn:hover { color: var(--text-2); }
+.tab-btn.active { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber-glow); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.session-counter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.session-pips { display: flex; gap: 3px; }
+.session-pip { width: 8px; height: 8px; border-radius: 50%; background: var(--timer-track); transition: var(--transition); }
+.session-pip.done { background: var(--amber); box-shadow: 0 0 6px var(--amber-glow); }
+
+/* ================================================
+   VIEWS
+   ================================================ */
+.view { display: none; flex: 1; overflow: hidden; }
+.view.active { display: flex; flex-direction: column; }
+
+/* ====== TIMER VIEW ====== */
+#view-timer {
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ambient glow behind timer */
+#view-timer::before {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--amber-soft) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: background 0.5s;
+}
+#view-timer.break-mode::before {
+  background: radial-gradient(circle, var(--teal-soft) 0%, transparent 70%);
+}
+
+.timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Mode label */
+.mode-label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 32px;
+  transition: color 0.5s;
+}
+.break-mode .mode-label { color: var(--teal); }
+
+/* Circular timer */
+.timer-ring-wrap {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin-bottom: 36px;
+}
+.timer-svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+.timer-ring-bg {
+  fill: none;
+  stroke: var(--timer-track);
+  stroke-width: 6;
+}
+.timer-ring-progress {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 816; /* 2 * PI * 130 */
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+  filter: drop-shadow(0 0 8px var(--amber-glow));
+}
+.break-mode .timer-ring-progress { stroke: var(--teal); filter: drop-shadow(0 0 8px var(--teal-glow)); }
+
+.timer-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.timer-display {
+  font-family: var(--font-mono);
+  font-size: 62px;
+  font-weight: 300;
+  color: var(--text-1);
+  letter-spacing: -2px;
+  line-height: 1;
+  transition: color 0.5s;
+}
+.timer-unit { font-size: 13px; color: var(--text-3); margin-top: 4px; font-family: var(--font-body); letter-spacing: 2px; text-transform: uppercase; }
+.break-mode .timer-display { color: var(--teal); }
+
+/* Task indicator in timer */
+.active-task-strip {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 7px 18px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 360px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+.active-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--rose);
+  flex-shrink: 0;
+  animation: blink 1.4s infinite;
+}
+.active-dot.running { background: var(--green); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.active-task-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--text-1); }
+
+/* Timer controls */
+.timer-controls { display: flex; align-items: center; gap: 14px; }
+.ctrl-btn {
+  width: 44px; height: 44px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-bright);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 17px;
+  color: var(--text-2);
+  transition: var(--transition);
+}
+.ctrl-btn:hover { background: var(--bg-raised); color: var(--text-1); transform: scale(1.05); }
+.ctrl-btn.primary {
+  width: 64px; height: 64px;
+  background: var(--amber);
+  color: var(--bg-void);
+  font-size: 22px;
+  border-color: var(--amber);
+  box-shadow: 0 6px 24px var(--amber-glow);
+}
+.ctrl-btn.primary:hover { background: #e88c24; transform: scale(1.06); }
+.break-mode .ctrl-btn.primary { background: var(--teal); border-color: var(--teal); box-shadow: 0 6px 24px var(--teal-glow); }
+
+/* Duration settings */
+.duration-settings {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+}
+.dur-preset {
+  padding: 5px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.dur-preset:hover { color: var(--text-1); border-color: var(--border-bright); }
+.dur-preset.active { background: var(--amber-soft); color: var(--amber); border-color: var(--amber-glow); }
+
+/* ====== ANALYTICS VIEW ====== */
+#view-analytics { padding: 0; overflow-y: auto; }
+.analytics-inner { padding: 24px; }
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--card-accent, var(--amber));
+}
+.stat-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  margin-bottom: 12px;
+}
+.stat-val {
+  font-family: var(--font-mono);
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--text-1);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.stat-label { font-size: 11px; color: var(--text-3); margin-top: 5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+
+.chart-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.chart-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 4px;
+}
+.chart-sub { font-size: 11.5px; color: var(--text-3); margin-bottom: 16px; }
+.chart-wrap { position: relative; height: 200px; }
+
+/* ====== SETTINGS VIEW ====== */
+#view-settings { padding: 0; overflow-y: auto; }
+.settings-inner { padding: 24px; max-width: 480px; }
+.settings-group {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.sg-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.setting-row:last-child { border-bottom: none; padding-bottom: 0; }
+.setting-label { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.setting-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.setting-control { display: flex; align-items: center; gap: 8px; }
+.num-input {
+  width: 60px;
+  background: var(--bg-mid);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  padding: 5px 8px;
+  text-align: center;
+  outline: none;
+  transition: var(--transition);
+}
+.num-input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-soft); }
+
+/* Toggle switch */
+.toggle-switch { position: relative; width: 40px; height: 22px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-bright);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  left: 2px; top: 2px;
+  background: var(--text-3);
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--amber-soft); border-color: var(--amber); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); background: var(--amber); }
+
+/* ================================================
+   MODAL
+   ================================================ */
+.modal-content {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-bright) !important;
+  border-radius: var(--radius) !important;
+  color: var(--text-1) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+.modal-header { border-bottom: 1px solid var(--border) !important; padding: 20px 24px 16px !important; }
+.modal-title { font-family: var(--font-display) !important; font-size: 20px !important; font-weight: 700 !important; }
+.modal-body { padding: 20px 24px !important; }
+.modal-footer { border-top: 1px solid var(--border) !important; padding: 14px 24px !important; }
+.btn-close { filter: invert(0.7); opacity: 0.6; }
+[data-theme="light"] .btn-close { filter: none; }
+
+.form-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 6px; }
+.form-control, .form-select {
+  background: var(--bg-mid) !important;
+  border: 1px solid var(--border-bright) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-1) !important;
+  font-family: var(--font-body) !important;
+  font-size: 13.5px !important;
+  padding: 9px 13px !important;
+  transition: var(--transition) !important;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 0 3px var(--amber-soft) !important;
+  outline: none !important;
+}
+.form-control::placeholder { color: var(--text-3) !important; }
+
+/* Priority selector */
+.priority-btns { display: flex; gap: 8px; }
+.prio-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: var(--bg-mid);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: var(--transition);
+  color: var(--text-3);
+}
+.prio-btn[data-p="high"].sel { background: var(--rose-soft); color: var(--rose); border-color: var(--rose); }
+.prio-btn[data-p="medium"].sel { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
+.prio-btn[data-p="low"].sel { background: var(--teal-soft); color: var(--teal); border-color: var(--teal); }
+
+.btn-primary-amber {
+  background: var(--amber);
+  color: var(--bg-void);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 22px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-primary-amber:hover { background: #e88c24; box-shadow: 0 4px 16px var(--amber-glow); }
+.btn-secondary-dim {
+  background: var(--bg-raised);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 22px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-secondary-dim:hover { background: var(--bg-hover); color: var(--text-1); }
+
+/* ================================================
+   MOTIVATIONAL QUOTE POPUP
+   ================================================ */
+.quote-popup {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-bright);
+  border-left: 3px solid var(--amber);
+  border-radius: var(--radius-sm);
+  padding: 14px 20px;
+  max-width: 420px;
+  width: 90%;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  box-shadow: var(--shadow-lg);
+}
+.quote-popup.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: all; }
+.quote-text { font-family: var(--font-display); font-size: 15px; font-style: italic; color: var(--text-2); line-height: 1.5; }
+.quote-author { font-size: 11px; color: var(--amber); font-weight: 600; margin-top: 6px; }
+
+/* ================================================
+   TOAST
+   ================================================ */
+#toast-zone {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-sm);
+  padding: 11px 16px;
+  font-size: 13px;
+  color: var(--text-1);
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  box-shadow: var(--shadow);
+  animation: toastSlide 0.25s ease;
+  pointer-events: all;
+}
+.toast-item.out { animation: toastFade 0.25s ease forwards; }
+@keyframes toastSlide { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
+@keyframes toastFade { to{opacity:0;transform:translateX(16px)} }
+
+/* ================================================
+   SKELETON
+   ================================================ */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-raised) 25%, var(--bg-hover) 50%, var(--bg-raised) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ================================================
+   RESPONSIVE
+   ================================================ */
+@media (max-width: 768px) {
+  .sidebar { width: 0; overflow: hidden; position: absolute; z-index: 300; height: 100%; }
+  .sidebar.mobile-open { width: var(--sidebar-w); }
+  .topbar { padding: 0 14px; }
+}
+
+/* ================================================
+   UTILITY
+   ================================================ */
+.empty-tasks { text-align: center; padding: 32px 16px; color: var(--text-3); }
+.empty-tasks .ei { font-size: 36px; margin-bottom: 10px; opacity: 0.3; }
+.empty-tasks .et { font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="toast-zone"></div>
+
+<!-- Quote popup -->
+<div class="quote-popup" id="quotePopup">
+  <div class="quote-text" id="quoteText">The secret of getting ahead is getting started.</div>
+  <div class="quote-author" id="quoteAuthor">— Mark Twain</div>
+</div>
+
+<!-- Task Modal -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="taskModalTitle">✏️ Add Task</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editTaskId">
+        <div class="mb-3">
+          <label class="form-label">Task Name</label>
+          <input type="text" class="form-control" id="taskName" placeholder="e.g. Chapter 5 — Thermodynamics">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Subject / Topic</label>
+          <input type="text" class="form-control" id="taskSubject" placeholder="e.g. Physics">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Estimated Pomodoros</label>
+          <input type="number" class="form-control" id="taskPomodoros" value="2" min="1" max="12">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Priority</label>
+          <div class="priority-btns">
+            <div class="prio-btn" data-p="high" onclick="selectPriority('high')">🔴 High</div>
+            <div class="prio-btn sel" data-p="medium" onclick="selectPriority('medium')">🟡 Medium</div>
+            <div class="prio-btn" data-p="low" onclick="selectPriority('low')">🟢 Low</div>
+          </div>
+          <input type="hidden" id="taskPriority" value="medium">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary-dim" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn-primary-amber" onclick="saveTask()">Save Task</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Daily Goal Modal -->
+<div class="modal fade" id="goalModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">🎯 Daily Goal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Target Pomodoros Today</label>
+        <input type="number" class="form-control" id="goalInput" min="1" max="20" value="8">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary-dim" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn-primary-amber" onclick="saveGoal()">Set Goal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================
+     APP SHELL
+     ================================================ -->
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="app-logo">📚</div>
+      <div>
+        <div class="app-name">Focus<span>Flow</span></div>
+      </div>
+    </div>
+
+    <div class="date-strip">
+      <div class="date-text" id="dateDisplay">Loading...</div>
+      <div class="streak-badge">🔥 <span id="streakCount">0</span>d streak</div>
+    </div>
+
+    <div class="goal-section">
+      <div class="goal-row">
+        <div class="goal-label">Daily Goal</div>
+        <div class="goal-value"><span id="goalDone">0</span> / <span id="goalTarget">8</span> sessions</div>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="goalProgress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="tasks-section">
+      <div class="section-header-row">
+        <div class="section-title">Study Tasks</div>
+        <button class="btn-add-task" onclick="openAddTask()" title="Add Task">+</button>
+      </div>
+      <div id="taskList">
+        <!-- Skeleton loader -->
+        <div class="skeleton" style="height:72px;margin-bottom:8px;border-radius:10px"></div>
+        <div class="skeleton" style="height:72px;margin-bottom:8px;border-radius:10px"></div>
+        <div class="skeleton" style="height:72px;border-radius:10px"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="sf-btn" onclick="openGoalModal()"><i class="bi bi-bullseye"></i> Set Goal</button>
+      <button class="sf-btn theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme">
+        <i class="bi bi-moon-fill" id="themeIcon"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <button class="tab-btn active" data-tab="timer" onclick="switchTab('timer')">⏱ Timer</button>
+      <button class="tab-btn" data-tab="analytics" onclick="switchTab('analytics')">📊 Analytics</button>
+      <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙️ Settings</button>
+      <div class="topbar-right">
+        <div class="session-counter">
+          <span style="font-size:11px">Session</span>
+          <div class="session-pips" id="sessionPips">
+            <div class="session-pip"></div>
+            <div class="session-pip"></div>
+            <div class="session-pip"></div>
+            <div class="session-pip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TIMER VIEW ===== -->
+    <div class="view active" id="view-timer">
+      <div class="timer-container">
+
+        <div class="mode-label" id="modeLabel">FOCUS SESSION</div>
+
+        <div class="timer-ring-wrap">
+          <svg class="timer-svg" viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle class="timer-ring-bg" cx="140" cy="140" r="130"/>
+            <circle class="timer-ring-progress" id="timerProgress" cx="140" cy="140" r="130"/>
+          </svg>
+          <div class="timer-inner">
+            <div class="timer-display" id="timerDisplay">25:00</div>
+            <div class="timer-unit" id="timerUnit">minutes</div>
+          </div>
+        </div>
+
+        <div class="active-task-strip">
+          <div class="active-dot" id="statusDot"></div>
+          <span id="activeTaskName" class="active-task-name">No task selected — click a task to focus</span>
+        </div>
+
+        <div class="timer-controls">
+          <button class="ctrl-btn" onclick="skipTimer()" title="Skip">
+            <i class="bi bi-skip-forward-fill"></i>
+          </button>
+          <button class="ctrl-btn primary" id="startStopBtn" onclick="toggleTimer()">
+            <i class="bi bi-play-fill" id="startStopIcon"></i>
+          </button>
+          <button class="ctrl-btn" onclick="resetTimer()" title="Reset">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </button>
+        </div>
+
+        <div class="duration-settings">
+          <div class="dur-preset active" data-min="25" onclick="setDuration(25, this)">25 min</div>
+          <div class="dur-preset" data-min="50" onclick="setDuration(50, this)">50 min</div>
+          <div class="dur-preset" data-min="90" onclick="setDuration(90, this)">90 min</div>
+          <div class="dur-preset" data-min="5" onclick="setDuration(5, this)">5 min</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== ANALYTICS VIEW ===== -->
+    <div class="view" id="view-analytics">
+      <div class="analytics-inner" id="analyticsContent">
+        <div class="analytics-grid">
+          <div class="stat-card" style="--card-accent:var(--amber)">
+            <div class="stat-icon" style="background:var(--amber-soft);color:var(--amber)">⏱</div>
+            <div class="stat-val" id="statTotalHours">0h</div>
+            <div class="stat-label">Total Study Time</div>
+          </div>
+          <div class="stat-card" style="--card-accent:var(--teal)">
+            <div class="stat-icon" style="background:var(--teal-soft);color:var(--teal)">🍅</div>
+            <div class="stat-val" id="statTotalPomos">0</div>
+            <div class="stat-label">Pomodoros Done</div>
+          </div>
+          <div class="stat-card" style="--card-accent:var(--green)">
+            <div class="stat-icon" style="background:var(--green-soft);color:var(--green)">✅</div>
+            <div class="stat-val" id="statTasksDone">0</div>
+            <div class="stat-label">Tasks Completed</div>
+          </div>
+          <div class="stat-card" style="--card-accent:var(--purple)">
+            <div class="stat-icon" style="background:rgba(183,148,244,0.1);color:var(--purple)">🔥</div>
+            <div class="stat-val" id="statStreak">0d</div>
+            <div class="stat-label">Current Streak</div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Weekly Study Sessions</div>
+          <div class="chart-sub">Pomodoros completed per day this week</div>
+          <div class="chart-wrap"><canvas id="weeklyChart"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Productivity Trend</div>
+          <div class="chart-sub">Daily study hours over the last 14 days</div>
+          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS VIEW ===== -->
+    <div class="view" id="view-settings">
+      <div class="settings-inner">
+        <div class="settings-group">
+          <div class="sg-title">⏱ Timer Settings</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Focus Duration</div><div class="setting-sub">Default Pomodoro length</div></div>
+            <div class="setting-control">
+              <input type="number" class="num-input" id="settFocus" value="25" min="5" max="90">
+              <span style="font-size:11px;color:var(--text-3)">min</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Short Break</div><div class="setting-sub">Break between pomodoros</div></div>
+            <div class="setting-control">
+              <input type="number" class="num-input" id="settShortBreak" value="5" min="1" max="30">
+              <span style="font-size:11px;color:var(--text-3)">min</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Long Break</div><div class="setting-sub">After 4 pomodoros</div></div>
+            <div class="setting-control">
+              <input type="number" class="num-input" id="settLongBreak" value="15" min="5" max="60">
+              <span style="font-size:11px;color:var(--text-3)">min</span>
+            </div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="sg-title">🔔 Notifications</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Sound Alerts</div><div class="setting-sub">Play sound when timer ends</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="settSound" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Motivational Quotes</div><div class="setting-sub">Show quotes on session start</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="settQuotes" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Auto-start Breaks</div><div class="setting-sub">Automatically begin break timer</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="settAutoBreak"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="sg-title">🗂 Data</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Reset All Data</div><div class="setting-sub">Wipe tasks and session history</div></div>
+            <button onclick="resetAllData()" style="padding:7px 14px;background:var(--rose-soft);color:var(--rose);border:1px solid var(--rose);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:var(--transition)">Reset</button>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="sg-title">ℹ️ About</div>
+          <div style="font-size:12.5px;color:var(--text-3);line-height:1.7">
+            <strong style="color:var(--text-2)">FocusFlow v1.0</strong><br>
+            A deep-focus study planner with Pomodoro technique, task management, and analytics. Built with HTML5, CSS3, Bootstrap 5, JavaScript &amp; jQuery.<br><br>
+            Press <kbd style="background:var(--bg-raised);padding:1px 6px;border-radius:4px;font-size:11px">Space</kbd> to start/pause • <kbd style="background:var(--bg-raised);padding:1px 6px;border-radius:4px;font-size:11px">R</kbd> to reset
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ====================================================
+   FOCUSFLOW — STUDY PLANNER & POMODORO TIMER
+   Modules: Storage | Tasks | Timer | Analytics | UI
+   ==================================================== */
+
+// =====================================================
+// QUOTES DATABASE
+// =====================================================
+const QUOTES = [
+  { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+  { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
+  { text: "Don't watch the clock; do what it does — keep going.", author: "Sam Levenson" },
+  { text: "The harder I work, the luckier I get.", author: "Samuel Goldwyn" },
+  { text: "Deep work is the ability to focus without distraction.", author: "Cal Newport" },
+  { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+  { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+  { text: "The future depends on what you do today.", author: "Mahatma Gandhi" },
+  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+  { text: "Work hard in silence, let success make the noise.", author: "Frank Ocean" },
+  { text: "Your time is limited, don't waste it living someone else's life.", author: "Steve Jobs" },
+  { text: "Discipline is choosing between what you want now and what you want most.", author: "Abraham Lincoln" },
+];
+
+// =====================================================
+// STATE
+// =====================================================
+let state = {
+  tasks: [],
+  sessions: [],          // { date, duration, taskId }
+  streak: 0,
+  lastStudyDate: null,
+  activeTaskId: null,
+  dailyGoal: 8,
+  todayPomos: 0,
+  settings: {
+    focusDuration: 25,
+    shortBreak: 5,
+    longBreak: 15,
+    sound: true,
+    quotes: true,
+    autoBreak: false
+  }
+};
+
+// Timer state
+let timer = {
+  running: false,
+  mode: 'focus',          // 'focus' | 'break'
+  remaining: 25 * 60,     // seconds
+  total: 25 * 60,
+  sessionCount: 0,        // pomodoros in this cycle (resets at 4)
+  interval: null
+};
+
+// =====================================================
+// STORAGE MODULE (localStorage + AJAX sim)
+// =====================================================
+const Storage = {
+  KEYS: {
+    tasks: 'ff_tasks',
+    sessions: 'ff_sessions',
+    streak: 'ff_streak',
+    lastDate: 'ff_lastDate',
+    goal: 'ff_goal',
+    todayPomos: 'ff_todayPomos',
+    settings: 'ff_settings',
+    theme: 'ff_theme'
+  },
+  save() {
+    try {
+      localStorage.setItem(this.KEYS.tasks, JSON.stringify(state.tasks));
+      localStorage.setItem(this.KEYS.sessions, JSON.stringify(state.sessions));
+      localStorage.setItem(this.KEYS.streak, state.streak);
+      localStorage.setItem(this.KEYS.lastDate, state.lastStudyDate || '');
+      localStorage.setItem(this.KEYS.goal, state.dailyGoal);
+      localStorage.setItem(this.KEYS.todayPomos, state.todayPomos);
+      localStorage.setItem(this.KEYS.settings, JSON.stringify(state.settings));
+    } catch(e) { console.warn('Storage save failed', e); }
+  },
+  load() {
+    try {
+      state.tasks = JSON.parse(localStorage.getItem(this.KEYS.tasks) || 'null') || defaultTasks();
+      state.sessions = JSON.parse(localStorage.getItem(this.KEYS.sessions) || '[]');
+      state.streak = parseInt(localStorage.getItem(this.KEYS.streak) || '0');
+      state.lastStudyDate = localStorage.getItem(this.KEYS.lastDate) || null;
+      state.dailyGoal = parseInt(localStorage.getItem(this.KEYS.goal) || '8');
+      state.todayPomos = parseInt(localStorage.getItem(this.KEYS.todayPomos) || '0');
+      const savedSettings = JSON.parse(localStorage.getItem(this.KEYS.settings) || 'null');
+      if (savedSettings) state.settings = { ...state.settings, ...savedSettings };
+    } catch(e) { state.tasks = defaultTasks(); }
+  }
+};
+
+// Ajax simulation
+const API = {
+  delay: ms => new Promise(r => setTimeout(r, ms)),
+  async fetchTasks() { await this.delay(400); return state.tasks; },
+  async saveTask(task) { await this.delay(80); Storage.save(); return task; },
+  async deleteTask(id) { await this.delay(80); Storage.save(); return true; }
+};
+
+// =====================================================
+// DEFAULT SAMPLE TASKS
+// =====================================================
+function defaultTasks() {
+  return [
+    { id: 't1', name: 'Read Chapter 7 — Organic Chemistry', subject: 'Chemistry', priority: 'high', estimated: 4, done: 0, completed: false, createdAt: Date.now() - 86400000 },
+    { id: 't2', name: 'Solve 20 Integration Problems', subject: 'Mathematics', priority: 'medium', estimated: 3, done: 1, completed: false, createdAt: Date.now() - 43200000 },
+    { id: 't3', name: 'Essay Draft — Industrial Revolution', subject: 'History', priority: 'low', estimated: 2, done: 2, completed: true, createdAt: Date.now() - 7200000 },
+    { id: 't4', name: 'Physics Lab Report', subject: 'Physics', priority: 'high', estimated: 3, done: 0, completed: false, createdAt: Date.now() }
+  ];
+}
+
+// =====================================================
+// TASK COLORS
+// =====================================================
+const PRIORITY_COLORS = { high: '#fc8181', medium: '#f6ad55', low: '#38b2ac' };
+
+// =====================================================
+// UI MODULE
+// =====================================================
+const UI = {
+  renderTasks(tasks) {
+    const list = document.getElementById('taskList');
+    const incomplete = tasks.filter(t => !t.completed);
+    const complete = tasks.filter(t => t.completed);
+    const ordered = [...incomplete, ...complete];
+
+    if (!ordered.length) {
+      list.innerHTML = `<div class="empty-tasks"><div class="ei">📋</div><div class="et">No tasks yet.<br>Add your first study task!</div></div>`;
+      return;
+    }
+
+    list.innerHTML = ordered.map(t => this.taskHTML(t)).join('');
+  },
+
+  taskHTML(t) {
+    const dots = Array(t.estimated).fill(0).map((_, i) =>
+      `<div class="pomo-dot${i < t.done ? ' filled' : ''}"></div>`).join('');
+    const activeClass = state.activeTaskId === t.id ? ' active-task' : '';
+    const completedClass = t.completed ? ' completed' : '';
+    return `
+      <div class="task-item${activeClass}${completedClass}" id="task-${t.id}" style="--task-color:${PRIORITY_COLORS[t.priority]}" onclick="selectTask('${t.id}')">
+        <div class="task-top">
+          <div class="task-check${t.completed ? ' checked' : ''}" onclick="event.stopPropagation();toggleTaskComplete('${t.id}')">
+            ${t.completed ? '<i class="bi bi-check2"></i>' : ''}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div class="task-name">${t.name}</div>
+            ${t.subject ? `<div class="task-subject">📘 ${t.subject}</div>` : ''}
+          </div>
+          <div class="task-actions">
+            <div class="task-action-btn edit" onclick="event.stopPropagation();editTask('${t.id}')"><i class="bi bi-pencil-fill"></i></div>
+            <div class="task-action-btn" onclick="event.stopPropagation();deleteTask('${t.id}')"><i class="bi bi-trash-fill"></i></div>
+          </div>
+        </div>
+        <div class="task-meta">
+          <span class="priority-tag priority-${t.priority}">${t.priority}</span>
+          <div class="pomodoros-done">${dots}</div>
+        </div>
+      </div>`;
+  },
+
+  updateGoalProgress() {
+    const pct = Math.min((state.todayPomos / state.dailyGoal) * 100, 100);
+    document.getElementById('goalProgress').style.width = pct + '%';
+    document.getElementById('goalDone').textContent = state.todayPomos;
+    document.getElementById('goalTarget').textContent = state.dailyGoal;
+  },
+
+  updateStreakDisplay() {
+    document.getElementById('streakCount').textContent = state.streak;
+    document.getElementById('statStreak').textContent = state.streak + 'd';
+  },
+
+  updateDate() {
+    const now = new Date();
+    const opts = { weekday: 'long', month: 'long', day: 'numeric' };
+    document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', opts);
+  },
+
+  updateTimerDisplay() {
+    const m = Math.floor(timer.remaining / 60).toString().padStart(2, '0');
+    const s = (timer.remaining % 60).toString().padStart(2, '0');
+    document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+    document.title = `${m}:${s} — FocusFlow`;
+
+    // Update ring
+    const circumference = 816;
+    const progress = timer.remaining / timer.total;
+    const offset = circumference * (1 - progress);
+    document.getElementById('timerProgress').style.strokeDashoffset = offset;
+  },
+
+  updateSessionPips() {
+    const pips = document.querySelectorAll('.session-pip');
+    pips.forEach((pip, i) => pip.classList.toggle('done', i < (timer.sessionCount % 4)));
+  },
+
+  setActiveTaskDisplay() {
+    const task = state.tasks.find(t => t.id === state.activeTaskId);
+    const nameEl = document.getElementById('activeTaskName');
+    const dot = document.getElementById('statusDot');
+    nameEl.textContent = task ? task.name : 'No task selected — click a task to focus';
+    dot.className = 'active-dot' + (timer.running ? ' running' : '');
+  },
+
+  applyBreakMode(isBreak) {
+    const timerView = document.getElementById('view-timer');
+    timerView.classList.toggle('break-mode', isBreak);
+    document.getElementById('modeLabel').textContent = isBreak ? 'BREAK TIME ☕' : 'FOCUS SESSION';
+    document.getElementById('timerUnit').textContent = isBreak ? 'seconds' : 'minutes';
+  }
+};
+
+// =====================================================
+// TIMER MODULE
+// =====================================================
+function toggleTimer() {
+  if (timer.running) pauseTimer();
+  else startTimer();
+}
+
+function startTimer() {
+  if (timer.running) return;
+  timer.running = true;
+  document.getElementById('startStopIcon').className = 'bi bi-pause-fill';
+  document.getElementById('statusDot').className = 'active-dot running';
+
+  if (timer.mode === 'focus' && state.settings.quotes) showRandomQuote();
+
+  timer.interval = setInterval(() => {
+    timer.remaining--;
+    UI.updateTimerDisplay();
+    if (timer.remaining <= 0) {
+      clearInterval(timer.interval);
+      timer.running = false;
+      onTimerComplete();
+    }
+  }, 1000);
+  Storage.save();
+}
+
+function pauseTimer() {
+  if (!timer.running) return;
+  timer.running = false;
+  clearInterval(timer.interval);
+  document.getElementById('startStopIcon').className = 'bi bi-play-fill';
+  document.getElementById('statusDot').className = 'active-dot';
+  showToast('⏸ Timer paused');
+}
+
+function resetTimer() {
+  clearInterval(timer.interval);
+  timer.running = false;
+  timer.remaining = timer.total;
+  document.getElementById('startStopIcon').className = 'bi bi-play-fill';
+  document.getElementById('statusDot').className = 'active-dot';
+  UI.updateTimerDisplay();
+  showToast('🔄 Timer reset');
+}
+
+function skipTimer() {
+  clearInterval(timer.interval);
+  timer.running = false;
+  onTimerComplete();
+}
+
+function setDuration(minutes, el) {
+  if (timer.running) { showToast('⚠️ Stop the timer first'); return; }
+  document.querySelectorAll('.dur-preset').forEach(d => d.classList.remove('active'));
+  el.classList.add('active');
+  timer.total = minutes * 60;
+  timer.remaining = timer.total;
+  state.settings.focusDuration = minutes;
+  UI.updateTimerDisplay();
+}
+
+function onTimerComplete() {
+  playSound();
+  document.title = 'FocusFlow — Done!';
+  document.getElementById('startStopIcon').className = 'bi bi-play-fill';
+  document.getElementById('statusDot').className = 'active-dot';
+
+  if (timer.mode === 'focus') {
+    // Completed a focus session
+    timer.sessionCount++;
+    state.todayPomos++;
+    checkStreak();
+
+    // Update active task pomodoro count
+    if (state.activeTaskId) {
+      const task = state.tasks.find(t => t.id === state.activeTaskId);
+      if (task) {
+        task.done = Math.min(task.done + 1, task.estimated);
+        if (task.done >= task.estimated) {
+          showToast(`🎉 "${task.name}" completed!`);
+        }
+      }
+    }
+
+    // Log session
+    state.sessions.push({
+      date: new Date().toISOString().split('T')[0],
+      duration: state.settings.focusDuration,
+      taskId: state.activeTaskId
+    });
+
+    UI.renderTasks(state.tasks);
+    UI.updateGoalProgress();
+    UI.updateSessionPips();
+    Storage.save();
+
+    showToast('🍅 Pomodoro complete! Time for a break.');
+
+    // Switch to break
+    const isLong = timer.sessionCount % 4 === 0;
+    const breakMins = isLong ? state.settings.longBreak : state.settings.shortBreak;
+    timer.mode = 'break';
+    timer.total = breakMins * 60;
+    timer.remaining = timer.total;
+    UI.applyBreakMode(true);
+    UI.updateTimerDisplay();
+
+    if (state.settings.autoBreak) startTimer();
+
+  } else {
+    // Break over → switch back to focus
+    timer.mode = 'focus';
+    timer.total = state.settings.focusDuration * 60;
+    timer.remaining = timer.total;
+    UI.applyBreakMode(false);
+    UI.updateTimerDisplay();
+    showToast('🎯 Break over! Ready to focus?');
+  }
+}
+
+function checkStreak() {
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  if (state.lastStudyDate === today) return;
+  if (state.lastStudyDate === yesterday) {
+    state.streak++;
+  } else if (!state.lastStudyDate || state.lastStudyDate < yesterday) {
+    state.streak = 1;
+  }
+  state.lastStudyDate = today;
+  UI.updateStreakDisplay();
+}
+
+// Sound using Web Audio API
+function playSound() {
+  if (!state.settings.sound) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523, 659, 784, 1047]; // C-E-G-C arpeggio
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.4);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.5);
+    });
+  } catch(e) { /* audio context unavailable */ }
+}
+
+// =====================================================
+// TASK MODULE
+// =====================================================
+function selectTask(id) {
+  if (timer.running) { showToast('⚠️ Pause the timer to switch tasks'); return; }
+  state.activeTaskId = state.activeTaskId === id ? null : id;
+  UI.renderTasks(state.tasks);
+  UI.setActiveTaskDisplay();
+  Storage.save();
+}
+
+function openAddTask() {
+  document.getElementById('editTaskId').value = '';
+  document.getElementById('taskModalTitle').textContent = '✏️ Add Task';
+  document.getElementById('taskName').value = '';
+  document.getElementById('taskSubject').value = '';
+  document.getElementById('taskPomodoros').value = '2';
+  selectPriority('medium');
+  new bootstrap.Modal(document.getElementById('taskModal')).show();
+}
+
+function editTask(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('editTaskId').value = t.id;
+  document.getElementById('taskModalTitle').textContent = '✏️ Edit Task';
+  document.getElementById('taskName').value = t.name;
+  document.getElementById('taskSubject').value = t.subject || '';
+  document.getElementById('taskPomodoros').value = t.estimated;
+  selectPriority(t.priority);
+  new bootstrap.Modal(document.getElementById('taskModal')).show();
+}
+
+async function saveTask() {
+  const name = document.getElementById('taskName').value.trim();
+  if (!name) { showToast('⚠️ Task name is required'); return; }
+  const editId = document.getElementById('editTaskId').value;
+  const task = {
+    id: editId || 't' + Date.now(),
+    name,
+    subject: document.getElementById('taskSubject').value.trim(),
+    priority: document.getElementById('taskPriority').value,
+    estimated: parseInt(document.getElementById('taskPomodoros').value) || 2,
+    done: editId ? (state.tasks.find(t=>t.id===editId)?.done || 0) : 0,
+    completed: editId ? (state.tasks.find(t=>t.id===editId)?.completed || false) : false,
+    createdAt: editId ? (state.tasks.find(t=>t.id===editId)?.createdAt || Date.now()) : Date.now()
+  };
+
+  if (editId) {
+    const idx = state.tasks.findIndex(t => t.id === editId);
+    if (idx !== -1) state.tasks[idx] = task;
+    showToast('✅ Task updated');
+  } else {
+    state.tasks.unshift(task);
+    showToast('✅ Task added');
+  }
+
+  await API.saveTask(task);
+  UI.renderTasks(state.tasks);
+  bootstrap.Modal.getInstance(document.getElementById('taskModal'))?.hide();
+}
+
+async function deleteTask(id) {
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  if (state.activeTaskId === id) { state.activeTaskId = null; UI.setActiveTaskDisplay(); }
+  await API.deleteTask(id);
+  UI.renderTasks(state.tasks);
+  showToast('🗑 Task deleted');
+}
+
+function toggleTaskComplete(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+  t.completed = !t.completed;
+  if (t.completed) {
+    t.done = t.estimated;
+    if (state.activeTaskId === id) { state.activeTaskId = null; UI.setActiveTaskDisplay(); }
+    showToast(`🎉 "${t.name}" marked complete!`);
+  }
+  Storage.save();
+  UI.renderTasks(state.tasks);
+}
+
+function selectPriority(p) {
+  document.querySelectorAll('.prio-btn').forEach(b => b.classList.remove('sel'));
+  document.querySelector(`.prio-btn[data-p="${p}"]`)?.classList.add('sel');
+  document.getElementById('taskPriority').value = p;
+}
+
+// =====================================================
+// GOAL MODULE
+// =====================================================
+function openGoalModal() {
+  document.getElementById('goalInput').value = state.dailyGoal;
+  new bootstrap.Modal(document.getElementById('goalModal')).show();
+}
+function saveGoal() {
+  state.dailyGoal = parseInt(document.getElementById('goalInput').value) || 8;
+  Storage.save();
+  UI.updateGoalProgress();
+  bootstrap.Modal.getInstance(document.getElementById('goalModal'))?.hide();
+  showToast(`🎯 Daily goal set to ${state.dailyGoal} sessions`);
+}
+
+// =====================================================
+// ANALYTICS MODULE
+// =====================================================
+let weeklyChartInst = null, trendChartInst = null;
+
+function renderAnalytics() {
+  // Stats
+  const totalMins = state.sessions.reduce((s, x) => s + x.duration, 0);
+  document.getElementById('statTotalHours').textContent = totalMins >= 60
+    ? (totalMins / 60).toFixed(1) + 'h' : totalMins + 'm';
+  document.getElementById('statTotalPomos').textContent = state.sessions.length;
+  document.getElementById('statTasksDone').textContent = state.tasks.filter(t => t.completed).length;
+  UI.updateStreakDisplay();
+
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDark ? '#5a6585' : '#a0aec0';
+  const gridColor = isDark ? 'rgba(99,120,178,0.08)' : 'rgba(99,120,178,0.06)';
+  const amberHex = isDark ? '#f6ad55' : '#d97706';
+
+  // Weekly chart — last 7 days
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today = new Date();
+  const weekData = Array(7).fill(0);
+  const weekLabels = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    weekLabels.push(days[d.getDay()]);
+    weekData[6 - i] = state.sessions.filter(s => s.date === ds).length;
+  }
+
+  if (weeklyChartInst) weeklyChartInst.destroy();
+  weeklyChartInst = new Chart(document.getElementById('weeklyChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: weekLabels,
+      datasets: [{
+        label: 'Pomodoros',
+        data: weekData,
+        backgroundColor: weekData.map((v, i) => i === 6 ? amberHex + 'ee' : amberHex + '55'),
+        borderColor: amberHex,
+        borderWidth: 1.5,
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: textColor, font: { size: 11, family: 'Figtree' } }, grid: { display: false } },
+        y: { ticks: { color: textColor, font: { size: 11 }, stepSize: 1 }, grid: { color: gridColor }, beginAtZero: true }
+      }
+    }
+  });
+
+  // Trend chart — 14 days
+  const trendLabels = [], trendData = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    const mins = state.sessions.filter(s => s.date === ds).reduce((a,b) => a + b.duration, 0);
+    trendLabels.push(i === 0 ? 'Today' : d.toLocaleDateString('en', { month: 'short', day: 'numeric' }));
+    trendData.push(parseFloat((mins / 60).toFixed(2)));
+  }
+
+  const tealHex = isDark ? '#38b2ac' : '#0d9488';
+  if (trendChartInst) trendChartInst.destroy();
+  trendChartInst = new Chart(document.getElementById('trendChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: trendLabels,
+      datasets: [{
+        label: 'Hours',
+        data: trendData,
+        borderColor: tealHex,
+        backgroundColor: tealHex + '18',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: tealHex,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y}h` } } },
+      scales: {
+        x: { ticks: { color: textColor, font: { size: 10 }, maxRotation: 45 }, grid: { display: false } },
+        y: { ticks: { color: textColor, font: { size: 11 }, callback: v => v + 'h' }, grid: { color: gridColor }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// =====================================================
+// NAVIGATION
+// =====================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+  if (tab === 'analytics') renderAnalytics();
+}
+
+// =====================================================
+// SETTINGS
+// =====================================================
+function applySettings() {
+  state.settings.focusDuration = parseInt(document.getElementById('settFocus').value) || 25;
+  state.settings.shortBreak = parseInt(document.getElementById('settShortBreak').value) || 5;
+  state.settings.longBreak = parseInt(document.getElementById('settLongBreak').value) || 15;
+  state.settings.sound = document.getElementById('settSound').checked;
+  state.settings.quotes = document.getElementById('settQuotes').checked;
+  state.settings.autoBreak = document.getElementById('settAutoBreak').checked;
+
+  if (!timer.running && timer.mode === 'focus') {
+    timer.total = state.settings.focusDuration * 60;
+    timer.remaining = timer.total;
+    UI.updateTimerDisplay();
+  }
+  Storage.save();
+}
+
+function syncSettingsUI() {
+  document.getElementById('settFocus').value = state.settings.focusDuration;
+  document.getElementById('settShortBreak').value = state.settings.shortBreak;
+  document.getElementById('settLongBreak').value = state.settings.longBreak;
+  document.getElementById('settSound').checked = state.settings.sound;
+  document.getElementById('settQuotes').checked = state.settings.quotes;
+  document.getElementById('settAutoBreak').checked = state.settings.autoBreak;
+}
+
+function resetAllData() {
+  if (!confirm('Reset ALL data? This cannot be undone.')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+// =====================================================
+// QUOTE POPUP
+// =====================================================
+let quoteTimeout;
+function showRandomQuote() {
+  const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  document.getElementById('quoteText').textContent = `"${q.text}"`;
+  document.getElementById('quoteAuthor').textContent = `— ${q.author}`;
+  const popup = document.getElementById('quotePopup');
+  popup.classList.add('show');
+  clearTimeout(quoteTimeout);
+  quoteTimeout = setTimeout(() => popup.classList.remove('show'), 5000);
+}
+document.getElementById('quotePopup').addEventListener('click', () => {
+  document.getElementById('quotePopup').classList.remove('show');
+});
+
+// =====================================================
+// TOAST
+// =====================================================
+function showToast(msg, duration = 3000) {
+  const zone = document.getElementById('toast-zone');
+  const item = document.createElement('div');
+  item.className = 'toast-item';
+  item.textContent = msg;
+  zone.appendChild(item);
+  setTimeout(() => {
+    item.classList.add('out');
+    setTimeout(() => item.remove(), 300);
+  }, duration);
+}
+
+// =====================================================
+// THEME
+// =====================================================
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeIcon').className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+  localStorage.setItem(Storage.KEYS.theme, isDark ? 'light' : 'dark');
+  if (document.getElementById('view-analytics').classList.contains('active')) {
+    setTimeout(renderAnalytics, 100);
+  }
+}
+
+// =====================================================
+// KEYBOARD SHORTCUTS
+// =====================================================
+document.addEventListener('keydown', e => {
+  if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  if (e.code === 'Space') { e.preventDefault(); toggleTimer(); }
+  if (e.key === 'r' || e.key === 'R') resetTimer();
+  if (e.key === 's' || e.key === 'S') skipTimer();
+});
+
+// =====================================================
+// SETTINGS LIVE UPDATE
+// =====================================================
+$(document).on('change input', '#settFocus, #settShortBreak, #settLongBreak, #settSound, #settQuotes, #settAutoBreak', applySettings);
+
+// =====================================================
+// INIT
+// =====================================================
+$(document).ready(async function() {
+  // Load theme
+  const savedTheme = localStorage.getItem('ff_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.getElementById('themeIcon').className = savedTheme === 'light' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+
+  // Load data
+  Storage.load();
+
+  // Check streak reset (new day, not yesterday)
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  if (state.lastStudyDate && state.lastStudyDate < yesterday) state.streak = 0;
+  // Reset today's pomos if new day
+  if (state.lastStudyDate !== today) state.todayPomos = 0;
+
+  UI.updateDate();
+  UI.updateStreakDisplay();
+  UI.updateGoalProgress();
+  syncSettingsUI();
+
+  // Init timer display
+  timer.total = state.settings.focusDuration * 60;
+  timer.remaining = timer.total;
+  UI.updateTimerDisplay();
+  UI.setActiveTaskDisplay();
+
+  // Fetch + render tasks (AJAX sim)
+  const tasks = await API.fetchTasks();
+  state.tasks = tasks;
+  UI.renderTasks(state.tasks);
+
+  // Session pips
+  UI.updateSessionPips();
+
+  // Initial quote after 2s
+  setTimeout(() => { if (state.settings.quotes) showRandomQuote(); }, 2000);
+
+  console.log('✅ FocusFlow loaded');
+});
+</script>
+</body>
+</html>
